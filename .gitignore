@@ -1,0 +1,5 @@
+# Ignore unneeded webpack files
+bundle.js.map
+
+# Ignore Mac OS system files
+.DS_Store
