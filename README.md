@@ -10,7 +10,7 @@ Simply add jtools.js to your HTML file:
 <script src="./js/jtools.js" charset="utf-8"></script>
 ```
 
-### ```$j``` Selector
+### ```$j``` - Selector
 To select DOM elements, use the ```$j``` selector. This takes the following arguments:
 
 * ```$j(string)```: Select by CSS selector, p.e. ```$j("h1")```
@@ -42,9 +42,15 @@ A DOM Node collection offers the following methods:
 * ```on(event, callback)```: Add an event handler to the node(s) that invokes ```callback``` on ```event```. For example: ```$j("h1").on("click", () => {alert("h1 clicked!")})```
 * ```off(event)```: Remove all event callbacks from the node(s) that match ```event```.
 
-### Document ready functions
+### ```$j``` - Document ready functions
 Passing a function to ```$j``` will queue a function to be invoked once the document is fully loaded. If the document has already finished loading, the function is invoked immediately.
 
-### AJAX
+### ```$j``` - AJAX
 
-* ```$j.ajax(options)```
+* ```$j.ajax(options)```: Create a new AJAX request. Takes the following ```options```:
+  * ```contentType```: The [media type](https://www.iana.org/assignments/media-types/media-types.xhtml) of the request. Default: ```application/x-www-form-urlencoded; charset=UTF-8```
+  * ```method```: The [HTTP method](https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html) used. Default: ```GET```
+  * ```url```: The target URL for the request. Default: empty
+  * ```success```: Callback function to be invoked on successful request. Default: None
+  * ```error```: Callback function to be invoked on unsuccessful request. Default: None
+  * ```data```: Data submitted with the AJAX request. Default: None
