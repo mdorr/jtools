@@ -1,7 +1,7 @@
 # jTools
 ## Lightweight DOM manipulation library
 
-The jTools are a collection of useful DOM manipulation tools, inspired by [jQuery](http://jquery.com). They allow the selection, traversal, event handling, and changing of DOM elements.
+The jTools are a collection of useful DOM manipulation tools. They allow the selection, traversal, event handling, and changing of DOM elements.
 
 ## Usage
 ### Installation
