@@ -55,6 +55,13 @@
 	  queued.push(arg);
 	};
 	
+	document.addEventListener("DOMContentLoaded", () => {
+	  queued.forEach((f) => {
+	    f();
+	  });
+	  queued = null;
+	});
+	
 	const $j = (arg) => {
 	  if (isString(arg)) {
 	    return new DOMNodeCollect(Array.from(document.querySelectorAll(arg)));
@@ -64,6 +71,53 @@
 	    document.readyState === "complete" ? arg() : enqueue(arg);
 	  }
 	}
+	
+	$j.extend = (base, ...objs) => {
+	  objs.forEach( obj => {
+	    for(let property in obj) {
+	      base[property] = obj[property];
+	    }
+	  });
+	  return base;
+	};
+	
+	$j.ajax = options => {
+	  const defaults = {
+	    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+	    method: "GET",
+	    url: "",
+	    success: () => {},
+	    error: () => {},
+	    data: {},
+	  };
+	  options = $l.extend(defaults, options);
+	  options.method = options.method.toUpperCase();
+	
+	  if (options.method === "GET"){
+	    options.url += "?" + queryString(options.data);
+	  }
+	
+	  request.open(options.method, options.url, true);
+	  request.onload = e => {
+	    if (request.status === 200) {
+	      options.success(request.response);
+	    } else {
+	      options.error(request.response);
+	    }
+	  };
+	
+	  request.send(JSON.stringify(options.data));
+	};
+	
+	queryString = obj => {
+	  let result = "";
+	  for(let property in obj){
+	    if (obj.hasOwnProperty(property)){
+	      result += property + "=" + obj[property] + "&";
+	    }
+	  }
+	  return result.substring(0, result.length - 1);
+	};
 	
 	
 	window.$j = $j;
@@ -77,18 +131,16 @@
 	  return typeof(s) === 'string' || s instanceof String;
 	};
 	
-	
-	
 	class DOMNodeCollect {
-	  constructor (htmlElements) {
-	    this.htmlElements = htmlElements;
+	  constructor (nodes) {
+	    this.nodes = nodes;
 	  }
 	
 	  html (string) {
 	    if (string === undefined) {
-	      return this.htmlElements[0].innerHTML;
+	      return this.nodes[0].innerHTML;
 	    } else {
-	      this.htmlElements.forEach((el) => el.innerHTML = string );
+	      this.nodes.forEach((el) => el.innerHTML = string );
 	    }
 	  }
 	
@@ -97,89 +149,95 @@
 	  }
 	
 	  append (add) {
-	    let addedString = "";
+	    let toAppend = "";
 	    if (isString(add)) {
-	      addedString = add;
+	      toAppend = add;
 	    } else if (add instanceof HTMLElement) {
-	      addedString = add.outerHTML;
+	      toAppend = add.outerHTML;
 	    } else if (add instanceof DOMNodeCollect) {
-	      for (let i = 0; i < add.htmlElements.length; i++) {
-	        addedString += add.htmlElements[i].outerHTML;
+	      for (let i = 0; i < add.nodes.length; i++) {
+	        toAppend += add.nodes[i].outerHTML;
 	      }
 	    }
-	
-	    this.htmlElements.forEach((el) => el.innerHTML += addedString);
+	    this.nodes.forEach((el) => el.innerHTML += toAppend);
 	  }
 	
-	  addClass (className) {
-	    this.htmlElements.forEach((el) => el.classList.add(className));
+	  addClass (c) {
+	    this.nodes.forEach((el) => el.classList.add(c));
 	  }
 	
-	  removeClass (className) {
-	    this.htmlElements.forEach((el) => el.classList.remove(className));
+	  removeClass (c) {
+	    this.nodes.forEach((el) => el.classList.remove(c));
 	  }
 	
-	  attr (key, value) {
-	    if (value === undefined) {
-	      return this.htmlElements[0].getAttribute(key);
+	  attr (k, v) {
+	    if (v === undefined) {
+	      return this.nodes[0].getAttribute(k);
 	    } else {
-	      this.htmlElements.forEach((el) => el.setAttribute(key, value));
+	      this.nodes.forEach((el) => el.setAttribute(k, v));
 	    }
 	  }
 	
 	  children () {
-	    // debugger
-	    let kiddies = [];
-	
-	    for (let i = 0; i < this.htmlElements.length; i++) {
-	      const el = this.htmlElements[i];
+	    let children = [];
+	    for (let i = 0; i < this.nodes.length; i++) {
+	      const el = this.nodes[i];
 	      for (let j = 0; j < el.children.length; j++) {
-	        kiddies.push(el.children[j]);
+	        children.push(el.children[j]);
 	      }
 	    }
-	    return new DOMNodeCollect(kiddies);
+	    return new DOMNodeCollect(children);
 	  }
 	
 	  parent () {
 	    let parents = [];
-	
-	    for (let i = 0; i < this.htmlElements.length; i++) {
-	      parents.push(this.htmlElements[i].parentElement);
+	    for (let i = 0; i < this.nodes.length; i++) {
+	      parents.push(this.nodes[i].parentElement);
 	    }
-	
 	    return new DOMNodeCollect(parents);
 	  }
 	
 	  find (selector) {
-	    let found = [];
-	
-	    for (let i = 0; i < this.htmlElements.length; i++) {
-	      const matches = this.htmlElements[i].querySelectorAll(selector);
+	    let result = [];
+	    for (let i = 0; i < this.nodes.length; i++) {
+	      const matches = this.nodes[i].querySelectorAll(selector);
 	      for (var j = 0; j < matches.length; j++) {
-	        found.push(matches[j]);
+	        result.push(matches[j]);
 	      }
 	    }
-	
-	    return new DOMNodeCollect(found);
+	    return new DOMNodeCollect(result);
 	  }
 	
 	  remove () {
-	    for (let i = 0; i < this.htmlElements.length; i++) {
-	      this.htmlElements[i].remove();
+	    for (let i = 0; i < this.nodes.length; i++) {
+	      this.nodes[i].remove();
 	    }
-	    this.htmlElements = [];
+	    this.nodes = [];
 	  }
 	
 	  on (event, callback) {
-	    this.htmlElements.forEach((el) => el.addEventListener(event, callback));
+	    debugger
+	    this.nodes.forEach(node => {
+	      node.addEventListener(event, callback);
+	      const eventKey = `jToolsEvents-${event}`;
+	      if (typeof node[eventKey] === "undefined") {
+	        node[eventKey] = [];
+	      }
+	      node[eventKey].push(callback);
+	    });
 	  }
 	
-	  off (event, callback) {
-	    this.htmlElements.forEach((el) => el.removeEventListener(event, callback));
+	  off (event) {
+	    this.nodes.forEach(node => {
+	      const eventKey = `jToolsEvents-${event}`;
+	      if (node[eventKey]) {
+	        node[eventKey].forEach(cb => {
+	          node.removeEventListener(event, cb)
+	        });
+	      }
+	      node[eventKey] = [];
+	    });
 	  }
-	
-	
-	
 	}
 	
 	module.exports = DOMNodeCollect;
