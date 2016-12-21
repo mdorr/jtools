@@ -4,8 +4,8 @@ module.exports = {
   context: __dirname,
   entry: './lib/jtools.js',
   output: {
-    path: path.join(__dirname, 'js', 'bundle'),
-    filename: 'bundle.js'
+    path: path.join(__dirname, 'js'),
+    filename: 'jtools.js'
   },
   resolve: {
     extensions: ['', '.js']
